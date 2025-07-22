@@ -1,18 +1,21 @@
 export default async function handler(req, res) {
-  const { slug } = req.query
-  const filename = `${slug}.txt`
+  const { slug } = req.query;
 
-  const githubApi = `https://api.github.com/repos/${process.env.GITHUB_USERNAME}/${process.env.GITHUB_REPO}/contents/codes/${filename}`
+  if (!slug) {
+    return res.status(400).json({ success: false, message: 'Slug is required' });
+  }
 
-  const response = await fetch(githubApi, {
-    headers: {
-      Authorization: `Bearer ${process.env.GITHUB_TOKEN}`
+  try {
+    const response = await fetch(`https://raw.githubusercontent.com/Dazhosting/View-Kode/main/codes/${slug}.txt`);
+
+    if (!response.ok) {
+      return res.status(response.status).json({ success: false, message: 'File not found' });
     }
-  })
 
-  if (!response.ok) return res.status(404).json({ success: false, message: 'File not found' })
+    const text = await response.text();
 
-  const data = await response.json()
-  const code = Buffer.from(data.content, 'base64').toString()
-  res.json({ success: true, code })
+    return res.status(200).json({ success: true, code: text });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Internal Server Error', error: err.message });
+  }
 }
