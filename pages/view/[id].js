@@ -64,40 +64,26 @@ export default function ViewCodePage({ code, id }) {
 
 // Ambil data kode berdasarkan ID dari GitHub
 export async function getStaticProps({ params }) {
-  const { id } = params
-
-  const GITHUB_USERNAME = process.env.GITHUB_USERNAME
-  const GITHUB_REPO = process.env.GITHUB_REPO
-  const GITHUB_TOKEN = process.env.GITHUB_TOKEN
-
-  const filename = `${id}.txt` // Pastikan nama file disimpan sebagai .txt di GitHub
+  const { id } = params;
 
   try {
-    const res = await fetch(
-      `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/codes/${filename}`,
-      {
-        headers: {
-          Authorization: `Bearer ${GITHUB_TOKEN}`,
-          Accept: 'application/vnd.github.v3.raw',
-        },
-      }
-    )
+    const res = await fetch(`https://your-domain.vercel.app/api/get?slug=${id}`); // ganti dengan domain kamu
+    const data = await res.json();
 
-    if (!res.ok) throw new Error('Failed to fetch')
-
-    const code = await res.text()
+    if (!data.success) throw new Error('Fetch failed');
 
     return {
-      props: { code, id },
+      props: { code: data.code, id },
       revalidate: 3600,
-    }
+    };
   } catch (error) {
-    console.error('Fetch error:', error.message)
+    console.error('Fetch error:', error.message);
     return {
       props: { code: null, id },
-    }
+    };
   }
-}
+      }
+
 
 // Gunakan fallback blocking agar halaman di-generate saat pertama kali diakses
 export async function getStaticPaths() {
