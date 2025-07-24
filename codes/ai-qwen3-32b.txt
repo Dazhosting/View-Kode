@@ -2,13 +2,12 @@ import { Groq } from 'groq-sdk';
 
 /*
 Credit: Vercel team 
-Base Api: https://console.groq.com/ & Module Groq
+Base Api: Module Groq
 Deskripsi: Bukan Dev Apalagi Sepuh
 */
 
 const groq = new Groq({
-  apiKey: "Create Sendiri Bre Ntar Punya gua takut Limit🗿"
-//Create Di https://console.groq.com/keys
+  apiKey: "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"
 });
 
 async function ChatAiQwen(messages) {
