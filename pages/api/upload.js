@@ -16,9 +16,9 @@ export default async function handler(req, res) {
     }
 
     // 3. Ambil konfigurasi dari environment variables
-    const githubToken = process.env.GITHUB_TOKEN;
-    const githubUsername = process.env.GITHUB_USERNAME;
-    const githubRepo = process.env.GITHUB_REPO;
+    const githubToken = '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';
+    const githubUsername = 'Dazhosting';
+    const githubRepo = 'View-Kode';
 
     if (!githubToken || !githubUsername || !githubRepo) {
       return res.status(500).json({ success: false, message: 'Server configuration error. Missing GitHub credentials.' });
