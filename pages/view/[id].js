@@ -10,30 +10,38 @@ export default function ViewCode() {
   const [code, setCode] = useState("");
   const [copied, setCopied] = useState(false);
   const [views, setViews] = useState(0);
-  const [meta, setMeta] = useState({ createdAt: '', language: '' });
+  const [meta, setMeta] = useState({ createdAt: "", language: "" });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!id) return;
 
-    fetch(`/api/get?slug=${id}`)
-      .then((res) => res.json())
-      .then((data) => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/get?slug=${id}`);
+        const data = await res.json();
+
         if (data.success) {
           setCode(data.code);
           setMeta({
-            createdAt: data.createdAt || '',
-            language: data.language || 'Tidak diketahui'
+            createdAt: data.createdAt || "",
+            language: data.language || "Tidak diketahui",
           });
         } else {
-          setCode("// Kode tidak ditemukan");
+          setCode("// ❌ Kode tidak ditemukan");
         }
-      });
 
-    fetch(`/api/view?slug=${id}`)
-      .then(res => res.json())
-      .then(data => {
-        setViews(data.views || 1);
-      });
+        const viewRes = await fetch(`/api/view?slug=${id}`);
+        const viewData = await viewRes.json();
+        setViews(viewData.views || 1);
+      } catch (e) {
+        setCode("// ❌ Terjadi kesalahan saat memuat kode");
+      }
+      setLoading(false);
+    };
+
+    fetchData();
   }, [id]);
 
   const copyToClipboard = () => {
@@ -52,140 +60,179 @@ export default function ViewCode() {
     <>
       <Head>
         <title>View Code - {id}</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
       <div className="container">
-        <h1>Kode: {id}</h1>
+        <h1>View Kode: <span>{id}</span></h1>
 
-        <div className="meta">
-          <p><strong>Bahasa:</strong> {meta.language}</p>
-          <p><strong>Dibuat:</strong> {meta.createdAt ? new Date(meta.createdAt).toLocaleString() : "Tidak diketahui"}</p>
-          <p><strong>Views:</strong> {views}</p>
-        </div>
+        {loading ? (
+          <div className="loading">⏳ Memuat kode...</div>
+        ) : (
+          <>
+            <div className="meta">
+              <p><strong>Bahasa:</strong> {meta.language}</p>
+              <p><strong>Dibuat:</strong> {meta.createdAt ? new Date(meta.createdAt).toLocaleString() : "Tidak diketahui"}</p>
+              <p><strong>Total Dilihat:</strong> {views}</p>
+            </div>
 
-        <div className="code-box">
-          <pre><code>{code}</code></pre>
-        </div>
+            <div className="terminal-box">
+              <div className="terminal-bar">
+                <span className="dot red" />
+                <span className="dot yellow" />
+                <span className="dot green" />
+              </div>
+              <pre><code>{code}</code></pre>
+            </div>
 
-        <button onClick={copyToClipboard} className="copy-btn">Salin Kode</button>
-        {copied && <div className="alert">📋 Kode berhasil disalin!</div>}
+            <button onClick={copyToClipboard} className="copy-btn">📋 Salin Kode</button>
+            {copied && <div className="alert">✅ Kode berhasil disalin!</div>}
 
-        <div className="share">
-          <button onClick={copyLink}>Salin Link</button>
-          <a href={`https://wa.me/?text=Scraper Terbaru Pecel Team Nih Rek: https://pecelview-kode.vercel.app/view/${id}`} target="_blank" rel="noopener noreferrer">Bagikan ke WhatsApp</a>
-          <a href={`https://t.me/share/url?url= Scraper Terbaru Pecel Team Nih Rek: https://pecelview-kode.vercel.app/view/${id}`} target="_blank" rel="noopener noreferrer">Bagikan ke Telegram</a>
-        </div>
+            <div className="share">
+              <button onClick={copyLink}>🔗 Salin Link</button>
+              <a href={`https://wa.me/?text=Lihat kode ini: https://pecelview-kode.vercel.app/view/${id}`} target="_blank">📱 WhatsApp</a>
+              <a href={`https://t.me/share/url?url=https://pecelview-kode.vercel.app/view/${id}&text=Lihat kode ini`} target="_blank">📨 Telegram</a>
+            </div>
 
-        <div className="qr">
-          <p>Scan QR untuk buka:</p>
-          <QRCodeCanvas
-            value={`https://pecelview-kode.vercel.app/view/${id}`}
-            size={130}
-            bgColor="#1a1a1a"
-            fgColor="#ffffff"
-            level="H"
-          />
-        </div>
+            <div className="qr">
+              <p>Scan QR:</p>
+              <QRCodeCanvas
+                value={`https://pecelview-kode.vercel.app/view/${id}`}
+                size={130}
+                bgColor="#000"
+                fgColor="#00ffff"
+                level="H"
+              />
+            </div>
+          </>
+        )}
       </div>
 
       <style jsx global>{`
         * {
-          margin: 0;
-          padding: 0;
           box-sizing: border-box;
         }
-        html, body {
-          background: #000;
-          color: #eee;
-          font-family: 'Courier New', Courier, monospace;
-          max-width: 100vw;
-          overflow-x: hidden;
+        body {
+          background: #0e0e0e;
+          color: #f0f0f0;
+          font-family: monospace;
         }
         .container {
-          padding: 40px 20px;
-          max-width: 800px;
+          padding: 30px 20px;
+          max-width: 900px;
           margin: auto;
           text-align: center;
         }
         h1 {
           font-size: 24px;
           margin-bottom: 20px;
+          color: #00ffff;
+        }
+        h1 span {
           color: #4db8ff;
         }
         .meta {
           margin-bottom: 20px;
           font-size: 14px;
-          color: #999;
+          color: #ccc;
           text-align: left;
         }
         .meta p {
           margin-bottom: 4px;
         }
-        .code-box {
+
+        .terminal-box {
           background: #1a1a1a;
+          border-radius: 8px;
+          overflow: hidden;
+          border: 1px solid #333;
+          margin-bottom: 15px;
+        }
+        .terminal-bar {
+          display: flex;
+          padding: 8px;
+          background: #2b2b2b;
+          justify-content: start;
+          gap: 6px;
+        }
+        .dot {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          display: inline-block;
+        }
+        .red { background: #ff5f56; }
+        .yellow { background: #ffbd2e; }
+        .green { background: #27c93f; }
+
+        pre {
+          margin: 0;
           padding: 20px;
-          border-radius: 12px;
           text-align: left;
           overflow-x: auto;
-          border: 1px solid #333;
-        }
-        .code-box pre {
-          margin: 0;
-          color: #dcdcdc;
+          color: #ffffffcc;
           font-size: 14px;
-          pointer-events: none;
-          user-select: none;
+          background: #1a1a1a;
         }
+
         .copy-btn {
-          margin-top: 20px;
-          background: #4db8ff;
-          border: none;
+          background: #00ffcc;
           color: #000;
+          border: none;
           font-weight: bold;
           padding: 10px 20px;
           border-radius: 8px;
           cursor: pointer;
-          transition: 0.2s ease;
+          margin-top: 8px;
         }
         .copy-btn:hover {
-          background: #3da0e6;
+          background: #00e6b3;
         }
+
         .alert {
           margin-top: 10px;
           color: #00ff88;
           font-size: 14px;
         }
-        .qr {
-          margin-top: 40px;
-        }
-        .qr p {
-          margin-bottom: 8px;
-          color: #888;
-        }
+
         .share {
           margin-top: 20px;
           display: flex;
           gap: 10px;
-          flex-wrap: wrap;
           justify-content: center;
+          flex-wrap: wrap;
         }
-        .share button, .share a {
+        .share button,
+        .share a {
           background: #4db8ff;
           color: black;
           text-decoration: none;
-          padding: 8px 14px;
+          padding: 10px 16px;
           border-radius: 8px;
           font-size: 14px;
           font-weight: bold;
           cursor: pointer;
-          transition: 0.2s ease;
         }
-        .share button:hover, .share a:hover {
+        .share a:hover,
+        .share button:hover {
           background: #3da0e6;
+        }
+
+        .qr {
+          margin-top: 30px;
+        }
+        .qr p {
+          color: #aaa;
+          margin-bottom: 6px;
+        }
+
+        .loading {
+          margin-top: 50px;
+          font-size: 16px;
+          color: #00ffff;
         }
       `}</style>
     </>
   );
-    }
-  
+          }
+    
