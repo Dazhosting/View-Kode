@@ -1,0 +1,40 @@
+import { Groq } from 'groq-sdk';
+
+/*
+Credit: Vercel team 
+Base Api: https://console.groq.com/ & Module Groq
+Deskripsi: Bukan Dev Apalagi Sepuh
+*/
+
+const groq = new Groq({
+  apiKey: "Create Sendiri Bre Ntar Punya gua takut Limit🗿"
+//Create Di https://console.groq.com/keys
+});
+
+async function ChatAiQwen(messages) {
+  const chatCompletion = await groq.chat.completions.create({
+    messages,
+    model: "qwen/qwen3-32b",
+    temperature: 0.6,
+    max_completion_tokens: 4096,
+    top_p: 0.95,
+    stream: true,
+    reasoning_effort: "default",
+    stop: null
+  });
+
+  let result = '';
+  for await (const chunk of chatCompletion) {
+    const content = chunk.choices?.[0]?.delta?.content || '';
+    result += content;
+  }
+
+  return result;
+}
+
+(async () => {
+  const output = await ChatAiQwen([
+    { role: "user", content: "Apa itu lubang hitam dalam fisika?" }
+  ]);
+  console.log(output);
+})();
