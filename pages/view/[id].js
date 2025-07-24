@@ -73,8 +73,8 @@ export default function ViewCode() {
 
         <div className="share">
           <button onClick={copyLink}>Salin Link</button>
-          <a href={`https://wa.me/?text=Lihat kode ini: https://pecelview-kode.vercel.app/view/${id}`} target="_blank" rel="noopener noreferrer">Bagikan ke WhatsApp</a>
-          <a href={`https://t.me/share/url?url=https://pecelview-kode.vercel.app/view/${id}`} target="_blank" rel="noopener noreferrer">Bagikan ke Telegram</a>
+          <a href={`https://wa.me/?text=Scraper Terbaru Pecel Team Nih Rek: https://pecelview-kode.vercel.app/view/${id}`} target="_blank" rel="noopener noreferrer">Bagikan ke WhatsApp</a>
+          <a href={`https://t.me/share/url?url= Scraper Terbaru Pecel Team Nih Rek: https://pecelview-kode.vercel.app/view/${id}`} target="_blank" rel="noopener noreferrer">Bagikan ke Telegram</a>
         </div>
 
         <div className="qr">
