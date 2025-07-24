@@ -67,7 +67,7 @@ export async function getStaticProps({ params }) {
   const { id } = params;
 
   try {
-    const res = await fetch(`https://your-domain.vercel.app/api/get?slug=${id}`); // ganti dengan domain kamu
+    const res = await fetch(`/api/get?slug=${id}`); // ganti dengan domain kamu
     const data = await res.json();
 
     if (!data.success) throw new Error('Fetch failed');
