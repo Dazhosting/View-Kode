@@ -76,7 +76,7 @@ export default function Home({ codes }) {
         }
       `}</style>
 
-      <h1>📁 Kode Tersimpan</h1>
+      <h1>📁 View Code Save</h1>
 
       <input
         type="text"
