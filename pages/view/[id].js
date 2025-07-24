@@ -6,19 +6,33 @@ import { QRCodeCanvas } from "qrcode.react";
 export default function ViewCode() {
   const router = useRouter();
   const { id } = router.query;
+
   const [code, setCode] = useState("");
   const [copied, setCopied] = useState(false);
+  const [views, setViews] = useState(0);
+  const [meta, setMeta] = useState({ createdAt: '', language: '' });
 
   useEffect(() => {
     if (!id) return;
+
     fetch(`/api/get?slug=${id}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
           setCode(data.code);
+          setMeta({
+            createdAt: data.createdAt || '',
+            language: data.language || 'Tidak diketahui'
+          });
         } else {
           setCode("// Kode tidak ditemukan");
         }
+      });
+
+    fetch(`/api/view?slug=${id}`)
+      .then(res => res.json())
+      .then(data => {
+        setViews(data.views || 1);
       });
   }, [id]);
 
@@ -26,6 +40,12 @@ export default function ViewCode() {
     navigator.clipboard.writeText(code);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const copyLink = () => {
+    const link = `https://pecelview-kode.vercel.app/view/${id}`;
+    navigator.clipboard.writeText(link);
+    alert("📋 Link berhasil disalin!");
   };
 
   return (
@@ -38,16 +58,24 @@ export default function ViewCode() {
       <div className="container">
         <h1>Kode: {id}</h1>
 
-        <div className="code-box">
-          <pre>
-            <code>{code}</code>
-          </pre>
+        <div className="meta">
+          <p><strong>Bahasa:</strong> {meta.language}</p>
+          <p><strong>Dibuat:</strong> {meta.createdAt ? new Date(meta.createdAt).toLocaleString() : "Tidak diketahui"}</p>
+          <p><strong>Views:</strong> {views}</p>
         </div>
 
-        <button onClick={copyToClipboard} className="copy-btn">
-          Salin Kode
-        </button>
+        <div className="code-box">
+          <pre><code>{code}</code></pre>
+        </div>
+
+        <button onClick={copyToClipboard} className="copy-btn">Salin Kode</button>
         {copied && <div className="alert">📋 Kode berhasil disalin!</div>}
+
+        <div className="share">
+          <button onClick={copyLink}>Salin Link</button>
+          <a href={`https://wa.me/?text=Lihat kode ini: https://pecelview-kode.vercel.app/view/${id}`} target="_blank" rel="noopener noreferrer">Bagikan ke WhatsApp</a>
+          <a href={`https://t.me/share/url?url=https://pecelview-kode.vercel.app/view/${id}`} target="_blank" rel="noopener noreferrer">Bagikan ke Telegram</a>
+        </div>
 
         <div className="qr">
           <p>Scan QR untuk buka:</p>
@@ -67,8 +95,7 @@ export default function ViewCode() {
           padding: 0;
           box-sizing: border-box;
         }
-        html,
-        body {
+        html, body {
           background: #000;
           color: #eee;
           font-family: 'Courier New', Courier, monospace;
@@ -85,6 +112,15 @@ export default function ViewCode() {
           font-size: 24px;
           margin-bottom: 20px;
           color: #4db8ff;
+        }
+        .meta {
+          margin-bottom: 20px;
+          font-size: 14px;
+          color: #999;
+          text-align: left;
+        }
+        .meta p {
+          margin-bottom: 4px;
         }
         .code-box {
           background: #1a1a1a;
@@ -127,8 +163,29 @@ export default function ViewCode() {
           margin-bottom: 8px;
           color: #888;
         }
+        .share {
+          margin-top: 20px;
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+        .share button, .share a {
+          background: #4db8ff;
+          color: black;
+          text-decoration: none;
+          padding: 8px 14px;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: bold;
+          cursor: pointer;
+          transition: 0.2s ease;
+        }
+        .share button:hover, .share a:hover {
+          background: #3da0e6;
+        }
       `}</style>
     </>
   );
-}
+    }
   
