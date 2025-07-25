@@ -1,0 +1,32 @@
+import fetch from 'node-fetch';
+
+async function scrapeObfuscatedCode(code) {
+  try {
+    const res = await fetch('https://xobf-generator.vercel.app/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      return data.obfuscated;
+    } else {
+      console.error('⚠️ Obfuscation failed:', data.error || 'Unknown error');
+      return null;
+    }
+  } catch (err) {
+    console.error('❌ Request failed:', err.message || err);
+    return null;
+  }
+}
+
+(async () => {
+  const originalCode = "console.log('Hello World')";
+  const obfuscated = await scrapeObfuscatedCode(originalCode);
+
+  if (obfuscated) {
+    console.log('✅ Obfuscated Code:', obfuscated);
+  }
+})();
