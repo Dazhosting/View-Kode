@@ -1,0 +1,25 @@
+const fetch = require('node-fetch'); // pastikan kamu sudah install: npm install node-fetch
+
+async function askGuruAI(question) {
+  try {
+    const res = await fetch("https://xvaai-guru.vercel.app/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: question }),
+    });
+
+    if (!res.ok) throw new Error(`❌ Error: ${res.statusText}`);
+
+    const data = await res.json();
+    console.log("✅ Jawaban AI:", data.message);
+    return data.message;
+  } catch (err) {
+    console.error("❌ Maaf, terjadi kesalahan saat menghubungi AI:", err.message);
+    return null;
+  }
+}
+
+// Contoh penggunaan eror fix sendiri 🗿😐🔹😴
+(async () => {
+  const jawaban = await askGuruAI("Apa itu algoritma?");
+})();
