@@ -3,10 +3,115 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { QRCodeCanvas } from "qrcode.react";
 
-// Helper components for Icons
-const Icon = ({ children, viewBox = "0 0 24 24" }) => (
-    <svg width="20" height="20" viewBox={viewBox} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{children}</svg>
-);
+//==================================================
+// 1. KOMPONEN ALERT KUSTOM (MODAL)
+//==================================================
+function CustomAlert({ isOpen, onClose, title, children }) {
+  useEffect(() => {
+    // Menangani penutupan modal saat tombol 'Escape' ditekan
+    const handleEsc = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+    if (isOpen) {
+      window.addEventListener('keydown', handleEsc);
+    }
+    return () => {
+      window.removeEventListener('keydown', handleEsc);
+    };
+  }, [isOpen, onClose]);
+  
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3>{title}</h3>
+          <button className="close-button" onClick={onClose}>&times;</button>
+        </div>
+        <div className="modal-body">
+          {children}
+        </div>
+      </div>
+      <style jsx>{`
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.7);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          animation: fadeIn 0.3s ease;
+        }
+        .modal-content {
+          background: #161b22;
+          padding: 1.5rem;
+          border-radius: 12px;
+          border: 1px solid #30363d;
+          width: 90%;
+          max-width: 500px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+          animation: slideIn 0.3s ease-out;
+        }
+        .modal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border-bottom: 1px solid #30363d;
+          padding-bottom: 1rem;
+          margin-bottom: 1rem;
+        }
+        .modal-header h3 {
+          margin: 0;
+          font-size: 1.25rem;
+          color: #c9d1d9;
+        }
+        .close-button {
+          background: transparent;
+          border: none;
+          color: #8b949e;
+          font-size: 2rem;
+          line-height: 1;
+          cursor: pointer;
+          padding: 0;
+          transition: color 0.2s ease;
+        }
+        .close-button:hover {
+          color: #fff;
+        }
+        .modal-body {
+          color: #c9d1d9;
+          font-size: 1rem;
+          line-height: 1.6;
+          max-height: 60vh;
+          overflow-y: auto;
+          white-space: pre-wrap; /* Penting untuk menjaga format teks dari AI */
+        }
+        
+        /* Animasi */
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideIn {
+          from { transform: translateY(-30px) scale(0.95); opacity: 0; }
+          to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+//==================================================
+// 2. KOMPONEN-KOMPONEN IKON
+//==================================================
+const Icon = ({ children, viewBox = "0 0 24 24" }) => ( <svg width="20" height="20" viewBox={viewBox} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{children}</svg> );
 const CopyIcon = () => <Icon><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></Icon>;
 const DownloadIcon = () => <Icon><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></Icon>;
 const ExplainIcon = () => <Icon viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><path d="m9 17 1 1 1-1"/></Icon>;
@@ -14,6 +119,9 @@ const LinkIcon = () => <Icon><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.0
 const WhatsAppIcon = () => <Icon viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></Icon>;
 const TelegramIcon = () => <Icon viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></Icon>;
 
+//==================================================
+// 3. KOMPONEN UTAMA HALAMAN
+//==================================================
 export default function ViewCode() {
   const router = useRouter();
   const { id } = router.query;
@@ -23,6 +131,10 @@ export default function ViewCode() {
   const [views, setViews] = useState(0);
   const [meta, setMeta] = useState({ createdAt: "", language: "text" });
 
+  // State untuk Alert Kustom
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [alertContent, setAlertContent] = useState({ title: "", message: "" });
+
   const showToast = (message) => {
     setToast({ show: true, message });
     setTimeout(() => {
@@ -30,9 +142,14 @@ export default function ViewCode() {
     }, 2500);
   };
 
+  const showAlert = (title, message) => {
+    setAlertContent({ title, message });
+    setIsAlertOpen(true);
+  }
+
   useEffect(() => {
     if (!id) return;
-
+    
     fetch(`/api/get?slug=${id}`)
       .then((res) => res.json())
       .then((data) => {
@@ -83,10 +200,13 @@ export default function ViewCode() {
             body: JSON.stringify({ code }),
         });
         const data = await response.json();
-        // Mengganti alert dengan tampilan yang lebih baik bisa menjadi peningkatan di masa depan (misal: modal)
-        alert("📖 Penjelasan dari AI:\n\n" + data.explanation);
+        if (response.ok) {
+            showAlert("📖 Penjelasan dari AI", data.explanation);
+        } else {
+            throw new Error(data.explanation || "Respon dari server tidak valid.");
+        }
     } catch (error) {
-        alert("Gagal mendapatkan penjelasan. Silakan coba lagi.");
+        showAlert("❌ Terjadi Kesalahan", "Gagal mendapatkan penjelasan dari AI. Silakan coba lagi nanti.");
     }
   };
 
@@ -105,7 +225,7 @@ export default function ViewCode() {
         
         <header className="page-header">
             <h1>Lihat Kode</h1>
-            <p>ID: <span>{id}</span></p>
+            <p>ID: <span>{id || "..."}</span></p>
         </header>
 
         <div className="meta-bar">
@@ -118,7 +238,7 @@ export default function ViewCode() {
 
         <div className="code-viewer">
             <div className="code-header">
-                <span>{`${id}.${meta.language}`}</span>
+                <span>{id || "file"}.{meta.language}</span>
                 <button onClick={copyToClipboard} title="Salin Kode">
                     <CopyIcon /> Salin
                 </button>
@@ -156,12 +276,19 @@ export default function ViewCode() {
             />
             <p>Atau scan QR code untuk membuka di perangkat lain.</p>
         </div>
-
       </div>
 
       <div className={`toast ${toast.show ? 'show' : ''}`}>
         {toast.message}
       </div>
+
+      <CustomAlert
+        isOpen={isAlertOpen}
+        onClose={() => setIsAlertOpen(false)}
+        title={alertContent.title}
+      >
+        <p>{alertContent.message}</p>
+      </CustomAlert>
 
       <style jsx global>{`
         :root {
@@ -190,6 +317,11 @@ export default function ViewCode() {
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
+            animation: containerFadeIn 0.5s ease-in-out;
+        }
+        @keyframes containerFadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .page-header {
@@ -227,6 +359,7 @@ export default function ViewCode() {
         }
         .meta-bar .divider {
             color: var(--border-color);
+            user-select: none;
         }
 
         .code-viewer {
@@ -287,6 +420,7 @@ export default function ViewCode() {
             font-weight: 500;
             margin-bottom: 0.75rem;
             color: var(--text-secondary);
+            padding-left: 0.25rem;
         }
         .action-group .buttons {
             display: flex;
@@ -307,6 +441,7 @@ export default function ViewCode() {
             border-radius: 8px;
             cursor: pointer;
             font-size: 0.9rem;
+            font-weight: 500;
             transition: all 0.2s ease;
         }
         .action-group button:hover, .action-group a:hover {
@@ -343,6 +478,7 @@ export default function ViewCode() {
             padding: 12px 24px;
             border-radius: 8px;
             font-size: 0.9rem;
+            font-weight: 500;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             transition: bottom 0.5s ease-in-out;
             z-index: 100;
@@ -359,4 +495,4 @@ export default function ViewCode() {
       `}</style>
     </>
   );
-  }
+      }
