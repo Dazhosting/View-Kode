@@ -32,11 +32,11 @@ export default function Home({ codes }) {
           background: #0d1117;
           color: #c9d1d9;
           min-height: 100vh;
+          padding: 2rem 1rem;
+          font-family: Arial, sans-serif;
           display: flex;
           flex-direction: column;
           align-items: center;
-          padding: 2rem 1rem;
-          font-family: Arial, sans-serif;
         }
 
         h1 {
@@ -57,6 +57,15 @@ export default function Home({ codes }) {
           background: #161b22;
           color: #fff;
           margin-bottom: 1rem;
+        }
+
+        .dashboard {
+          margin: 1rem 0 2rem;
+          background: #161b22;
+          padding: 1rem 1.5rem;
+          border-radius: 10px;
+          border: 1px solid #30363d;
+          text-align: center;
         }
 
         .list {
@@ -92,6 +101,13 @@ export default function Home({ codes }) {
 
       <h1>📁 View Code Save</h1>
 
+      {/* DASHBOARD */}
+      <div className="dashboard">
+        <div>📊 Total Kode Tersedia: <strong>{codes.length}</strong></div>
+        <div>🧩 Kategori Unik: <strong>{categories.length}</strong></div>
+      </div>
+
+      {/* FILTER */}
       <select
         className="category-select"
         value={selectedCategory}
@@ -113,6 +129,7 @@ export default function Home({ codes }) {
         onChange={(e) => setSearch(e.target.value)}
       />
 
+      {/* LIST */}
       <div className="list">
         {filtered.length > 0 ? (
           filtered.map((file) => (
@@ -147,5 +164,4 @@ export async function getStaticProps() {
       codes: txtFiles,
     },
   };
-          }
-                       
+                       }
