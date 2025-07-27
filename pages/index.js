@@ -266,7 +266,7 @@ export default function Home({ codes }) {
 
       <header className="header">
         <h1>📁 Code Library</h1>
-        <p className="subtitle">Telusuri, Saring, dan Temukan Kode Anda.</p>
+        <p className="subtitle">Telusuri, Saring, dan Temukan Kode Kalian📍.</p>
       </header>
       
       {/* DASHBOARD */}
