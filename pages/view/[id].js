@@ -1,3 +1,4 @@
+//pages/view/[id].js
 import { useEffect, useState } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
@@ -5,10 +6,10 @@ import { QRCodeCanvas } from "qrcode.react";
 
 //==================================================
 // 1. KOMPONEN ALERT KUSTOM (MODAL)
+// [Kode tidak berubah, sama seperti sebelumnya]
 //==================================================
 function CustomAlert({ isOpen, onClose, title, children }) {
   useEffect(() => {
-    // Menangani penutupan modal saat tombol 'Escape' ditekan
     const handleEsc = (event) => {
       if (event.key === 'Escape') {
         onClose();
@@ -108,8 +109,10 @@ function CustomAlert({ isOpen, onClose, title, children }) {
   );
 }
 
+
 //==================================================
 // 2. KOMPONEN-KOMPONEN IKON
+// [Kode tidak berubah, sama seperti sebelumnya]
 //==================================================
 const Icon = ({ children, viewBox = "0 0 24 24" }) => ( <svg width="20" height="20" viewBox={viewBox} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{children}</svg> );
 const CopyIcon = () => <Icon><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></Icon>;
@@ -119,19 +122,43 @@ const LinkIcon = () => <Icon><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.0
 const WhatsAppIcon = () => <Icon viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></Icon>;
 const TelegramIcon = () => <Icon viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></Icon>;
 
+
 //==================================================
-// 3. KOMPONEN UTAMA HALAMAN
+// 3. ✨ [BARU] KOMPONEN SKELETON LOADING
+//==================================================
+function CodeSkeletonLoader() {
+    return (
+        <div className="skeleton-container">
+            <div className="skeleton-header">
+                <div className="skeleton-text skeleton-filename"></div>
+                <div className="skeleton-button"></div>
+            </div>
+            <div className="skeleton-body">
+                <div className="skeleton-text" style={{width: '80%'}}></div>
+                <div className="skeleton-text" style={{width: '95%'}}></div>
+                <div className="skeleton-text" style={{width: '70%'}}></div>
+                <div className="skeleton-text" style={{width: '85%'}}></div>
+                <div className="skeleton-text" style={{width: '60%'}}></div>
+            </div>
+        </div>
+    );
+}
+
+
+//==================================================
+// 4. KOMPONEN UTAMA HALAMAN (DENGAN PERUBAHAN)
 //==================================================
 export default function ViewCode() {
   const router = useRouter();
   const { id } = router.query;
 
-  const [code, setCode] = useState("Memuat kode...");
+  // Hapus "Memuat kode..." dan tambahkan state isLoading
+  const [code, setCode] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState({ show: false, message: "" });
   const [views, setViews] = useState(0);
   const [meta, setMeta] = useState({ createdAt: "", language: "text" });
 
-  // State untuk Alert Kustom
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [alertContent, setAlertContent] = useState({ title: "", message: "" });
 
@@ -149,6 +176,8 @@ export default function ViewCode() {
 
   useEffect(() => {
     if (!id) return;
+
+    setIsLoading(true); // Mulai loading saat ID berubah
     
     fetch(`/api/get?slug=${id}`)
       .then((res) => res.json())
@@ -162,6 +191,12 @@ export default function ViewCode() {
         } else {
           setCode(`// Kode dengan ID "${id}" tidak dapat ditemukan.\n// Mungkin sudah dihapus atau ID salah.`);
         }
+      })
+      .catch(() => {
+        setCode(`// Gagal memuat kode. Periksa koneksi internet Anda.`);
+      })
+      .finally(() => {
+        setIsLoading(false); // Hentikan loading setelah fetch selesai (sukses atau gagal)
       });
 
     fetch(`/api/view?slug=${id}`)
@@ -171,6 +206,7 @@ export default function ViewCode() {
       });
   }, [id]);
 
+  // ... (Fungsi-fungsi lain seperti copyToClipboard, downloadCode, dll tidak berubah)
   const copyToClipboard = () => {
     navigator.clipboard.writeText(code);
     showToast("✅ Kode berhasil disalin!");
@@ -210,10 +246,11 @@ export default function ViewCode() {
     }
   };
 
+
   return (
     <>
       <Head>
-        <title>{`Kode: ${id}`}</title>
+        <title>{isLoading ? `Memuat Kode...` : `Kode: ${id}`}</title>
         <meta name="description" content={`Lihat dan kelola kode dengan ID: ${id}`} />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -236,17 +273,22 @@ export default function ViewCode() {
             <span>Dibuat: <strong>{meta.createdAt ? new Date(meta.createdAt).toLocaleString('id-ID') : '-'}</strong></span>
         </div>
 
-        <div className="code-viewer">
-            <div className="code-header">
-                <span>{id || "file"}.{meta.language}</span>
-                <button onClick={copyToClipboard} title="Salin Kode">
-                    <CopyIcon /> Salin
-                </button>
+        {/* ✨ [PERUBAHAN] Tampilkan loader atau kode asli berdasarkan state isLoading */}
+        {isLoading ? (
+            <CodeSkeletonLoader />
+        ) : (
+            <div className="code-viewer">
+                <div className="code-header">
+                    <span>{id || "file"}.{meta.language}</span>
+                    <button onClick={copyToClipboard} title="Salin Kode">
+                        <CopyIcon /> Salin
+                    </button>
+                </div>
+                <div className="code-body">
+                    <pre><code>{code}</code></pre>
+                </div>
             </div>
-            <div className="code-body">
-                <pre><code>{code}</code></pre>
-            </div>
-        </div>
+        )}
 
         <div className="actions-panel">
             <div className="action-group">
@@ -299,6 +341,8 @@ export default function ViewCode() {
             --text-secondary: #8b949e;
             --accent-color: #58a6ff;
             --accent-hover: #79c0ff;
+            --skeleton-bg: #1f242c;
+            --skeleton-highlight: #30363d;
         }
         * {
             margin: 0;
@@ -410,6 +454,49 @@ export default function ViewCode() {
             line-height: 1.6;
         }
 
+        /* ✨ [BARU] STYLING UNTUK SKELETON LOADER */
+        @keyframes pulse {
+            50% { background-color: var(--skeleton-highlight); }
+        }
+        .skeleton-container {
+            background: var(--panel-color);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .skeleton-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: var(--skeleton-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .skeleton-body {
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .skeleton-text {
+            height: 1em;
+            background-color: var(--skeleton-bg);
+            border-radius: 4px;
+            animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        .skeleton-filename {
+            width: 150px;
+            height: 14px;
+        }
+        .skeleton-button {
+            width: 80px;
+            height: 28px;
+            border-radius: 6px;
+            background-color: var(--skeleton-bg);
+            animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+
         .actions-panel {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -495,4 +582,4 @@ export default function ViewCode() {
       `}</style>
     </>
   );
-      }
+  }
