@@ -164,19 +164,21 @@ export default function ViewCode() {
   const explainCode = async () => {
     showAlert("🤖 Menganalisis Kode...", "AI sedang bekerja untuk memberikan penjelasan. Mohon tunggu sebentar...");
     try {
-      const response = await fetch("/api/explain", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        showAlert("📖 Penjelasan dari AI", data.explanation);
-      } else {
-        throw new Error(data.explanation || "Respon dari server tidak valid.");
-      }
+     const response = await fetch("/api/explain", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      showAlert("📖 Penjelasan dari AI", data.explanation);
+    } else {
+       showAlert("❌ Terjadi Kesalahan", data.error || "Gagal mendapatkan penjelasan dari AI.");
+    }
     } catch (error) {
-      showAlert("❌ Terjadi Kesalahan", "Gagal mendapatkan penjelasan dari AI. Silakan coba lagi nanti.");
+      showAlert("❌ Terjadi Kesalahan", "Koneksi ke server gagal. Silakan coba lagi nanti.");
     }
   };
 
