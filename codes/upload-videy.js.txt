@@ -1,0 +1,39 @@
+const axios = require('axios');
+const FormData = require('form-data');
+const fs = require('fs');
+const path = require('path');
+
+// Fungsi upload Video ke Videy
+async function uploadToVidey(filePath, visitorId = null) {
+  if (!fs.existsSync(filePath)) throw new Error("File tidak ditemukan.");
+
+  const allowedTypes = ['.mp4', '.mov'];
+  const ext = path.extname(filePath).toLowerCase();
+  const stats = fs.statSync(filePath);
+
+  if (!allowedTypes.includes(ext)) throw new Error("Format file tidak didukung. Hanya MP4 & MOV.");
+  if (stats.size > 100 * 1024 * 1024) throw new Error("Ukuran file melebihi 100MB.");
+
+  const form = new FormData();
+  form.append('file', fs.createReadStream(filePath));
+  if (!visitorId) visitorId = generateUUID();
+
+  const uploadUrl = `https://videy.co/api/upload?visitorId=${encodeURIComponent(visitorId)}`;
+  const res = await axios.post(uploadUrl, form, {
+    headers: { ...form.getHeaders() },
+    maxContentLength: Infinity,
+    maxBodyLength: Infinity,
+  });
+
+  if (res.data && res.data.link) return res.data.link;
+  else throw new Error("Upload gagal: Respon tidak valid.");
+}
+
+// UUID Generator Nya Bre
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : ((r & 0x3) | 0x8);
+    return v.toString(16);
+  });
+} 
