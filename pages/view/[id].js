@@ -9,10 +9,10 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 
 
 //==================================================
-// 1. KOMPONEN-KOMPONEN UI (DIPERBARUI & BARU)
+// 1. UI COMPONENTS (UPDATED & NEW)
 //==================================================
 
-// --- Modal/Alert (Tidak berubah, sudah bagus) ---
+// --- Modal/Alert (Unchanged, already good) ---
 function CustomAlert({ isOpen, onClose, title, children }) {
   useEffect(() => {
     const handleEsc = (event) => event.key === 'Escape' && onClose();
@@ -50,7 +50,7 @@ function CustomAlert({ isOpen, onClose, title, children }) {
   );
 }
 
-// --- Ikon (Tidak berubah) ---
+// --- Icons (Unchanged) ---
 const Icon = ({ children, viewBox = "0 0 24 24" }) => ( <svg width="20" height="20" viewBox={viewBox} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{children}</svg> );
 const CopyIcon = () => <Icon><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></Icon>;
 const DownloadIcon = () => <Icon><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></Icon>;
@@ -59,7 +59,7 @@ const LinkIcon = () => <Icon><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.0
 const WhatsAppIcon = () => <Icon viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></Icon>;
 const TelegramIcon = () => <Icon viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></Icon>;
 
-// --- ✨ [BARU] Tombol Aksi Reusable ---
+// --- ✨ [NEW] Reusable Action Button ---
 const ActionButton = ({ icon, text, onClick, href }) => {
     const Tag = href ? 'a' : 'button';
     return (
@@ -70,7 +70,7 @@ const ActionButton = ({ icon, text, onClick, href }) => {
     );
 };
 
-// --- ✨ [DIPERBARUI] Skeleton Loader dengan gaya baru ---
+// --- ✨ [UPDATED] Skeleton Loader with new style ---
 function CodeSkeletonLoader() {
     return (
         <div className="skeleton-panel code-viewer">
@@ -91,7 +91,7 @@ function CodeSkeletonLoader() {
 }
 
 //==================================================
-// 2. KOMPONEN UTAMA HALAMAN (DIROMBAK TOTAL)
+// 2. MAIN PAGE COMPONENT (COMPLETELY OVERHAULED)
 //==================================================
 export default function ViewCode() {
   const router = useRouter();
@@ -121,6 +121,7 @@ export default function ViewCode() {
     if (!id) return;
     setIsLoading(true);
     
+    // Fetch code content
     fetch(`/api/get?slug=${id}`)
       .then((res) => res.json())
       .then((data) => {
@@ -131,57 +132,63 @@ export default function ViewCode() {
             language: data.language || "text",
           });
         } else {
-          setCode(`// Kode dengan ID "${id}" tidak ditemukan.`);
+          setCode(`// Code with ID "${id}" not found.`);
         }
       })
-      .catch(() => setCode(`// Gagal memuat kode.`))
+      .catch(() => setCode(`// Failed to load code.`))
       .finally(() => setIsLoading(false));
 
+    // Fetch and update view count
     fetch(`/api/view?slug=${id}`)
       .then((res) => res.json())
       .then((data) => setViews(data.views || 1));
   }, [id]);
 
+  // --- Action Handlers ---
   const copyToClipboard = () => {
     navigator.clipboard.writeText(code);
-    showToast("✅ Kode berhasil disalin!");
+    showToast("✅ Code copied successfully!");
   };
 
   const copyLink = () => {
     navigator.clipboard.writeText(pageUrl);
-    showToast("📋 Link berhasil disalin!");
+    showToast("📋 Link copied successfully!");
   };
 
   const downloadCode = () => {
     const blob = new Blob([code], { type: "text/plain" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `${id}.${meta.language === 'text' ? 'txt' : meta.language}`;
+    const extension = meta.language === 'text' || !meta.language ? 'txt' : meta.language;
+    a.download = `${id}.${extension}`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(a.href);
   };
 
   const explainCode = async () => {
-    showAlert("🤖 Menganalisis Kode...", "AI sedang bekerja untuk memberikan penjelasan. Mohon tunggu sebentar...");
+    showAlert("🤖 Analyzing Code...", "The AI is working on an explanation. Please wait a moment...");
     try {
-     const response = await fetch("/api/explain", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code }),
-    });
+     const response = await fetch("/api/explain", {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({ code }),
+     });
 
-    const data = await response.json();
+     const data = await response.json();
 
-    if (response.ok) {
-      showAlert("📖 Penjelasan dari AI", data.explanation);
-    } else {
-       showAlert("❌ Terjadi Kesalahan", data.error || "Gagal mendapatkan penjelasan dari AI.");
+     if (response.ok) {
+       showAlert("📖 AI Explanation", data.explanation);
+     } else {
+        showAlert("❌ An Error Occurred", data.error || "Failed to get explanation from AI.");
     }
     } catch (error) {
-      showAlert("❌ Terjadi Kesalahan", "Koneksi ke server gagal. Silakan coba lagi nanti.");
+      showAlert("❌ An Error Occurred", "Connection to the server failed. Please try again later.");
     }
   };
 
+  // --- Animation Variants ---
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { 
@@ -199,8 +206,8 @@ export default function ViewCode() {
   return (
     <>
       <Head>
-        <title>{isLoading ? `Memuat...` : `Kode: ${id}`}</title>
-        <meta name="description" content={`Lihat dan kelola kode dengan ID: ${id}`} />
+        <title>{isLoading ? `Loading...` : `Code: ${id}`}</title>
+        <meta name="description" content={`View and manage code with ID: ${id}`} />
         <link rel="icon" href="/favicon.ico" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
@@ -226,8 +233,8 @@ export default function ViewCode() {
                     <div className="code-viewer panel">
                         <div className="code-header">
                             <span>{id || "file"}.{meta.language}</span>
-                            <button onClick={copyToClipboard} title="Salin Kode">
-                                <CopyIcon /> Salin
+                            <button onClick={copyToClipboard} title="Copy Code">
+                                <CopyIcon /> Copy
                             </button>
                         </div>
                         <div className="code-body">
@@ -256,32 +263,32 @@ export default function ViewCode() {
                 <motion.div className="panel" variants={itemVariants}>
                     <h4>Metadata</h4>
                     <ul className="meta-list">
-                        <li><span>Bahasa</span><strong>{meta.language}</strong></li>
-                        <li><span>Dilihat</span><strong>{views} kali</strong></li>
-                        <li><span>Dibuat</span><strong>{meta.createdAt ? new Date(meta.createdAt).toLocaleString('id-ID') : '-'}</strong></li>
+                        <li><span>Language</span><strong>{meta.language}</strong></li>
+                        <li><span>Views</span><strong>{views}</strong></li>
+                        <li><span>Created</span><strong>{meta.createdAt ? new Date(meta.createdAt).toLocaleString('id-ID') : '-'}</strong></li>
                     </ul>
                 </motion.div>
 
                 <motion.div className="panel" variants={itemVariants}>
-                    <h4>Alat & Aksi</h4>
+                    <h4>Tools & Actions</h4>
                     <div className="button-group">
                         <ActionButton icon={<DownloadIcon />} text="Download File" onClick={downloadCode} />
-                        <ActionButton icon={<ExplainIcon />} text="Jelaskan dengan AI" onClick={explainCode} />
+                        <ActionButton icon={<ExplainIcon />} text="Explain with AI" onClick={explainCode} />
                     </div>
                 </motion.div>
 
                 <motion.div className="panel" variants={itemVariants}>
-                    <h4>Bagikan</h4>
+                    <h4>Share</h4>
                     <div className="button-group">
-                         <ActionButton icon={<LinkIcon />} text="Salin Link" onClick={copyLink} />
-                         <ActionButton icon={<WhatsAppIcon />} text="WhatsApp" href={`https://wa.me/?text=Lihat kode ini: ${pageUrl}`} />
-                         <ActionButton icon={<TelegramIcon />} text="Telegram" href={`https://t.me/share/url?url=${pageUrl}&text=Lihat kode ini`} />
+                         <ActionButton icon={<LinkIcon />} text="Copy Link" onClick={copyLink} />
+                         <ActionButton icon={<WhatsAppIcon />} text="WhatsApp" href={`https://wa.me/?text=Check out this code: ${pageUrl}`} />
+                         <ActionButton icon={<TelegramIcon />} text="Telegram" href={`https://t.me/share/url?url=${pageUrl}&text=Check out this code`} />
                     </div>
                 </motion.div>
                 
                 <motion.div className="panel qr-panel" variants={itemVariants}>
                     <QRCodeCanvas value={pageUrl} size={110} bgColor="transparent" fgColor="#e6edf3" level="H" />
-                    <p>Scan untuk membuka di perangkat lain.</p>
+                    <p>Scan to open on another device.</p>
                 </motion.div>
             </motion.div>
         </div>
@@ -305,7 +312,7 @@ export default function ViewCode() {
       </CustomAlert>
 
       {/* ============================================== */}
-      {/* ============ STYLES (DIROMBAK TOTAL) ========= */}
+      {/* ============ STYLES (COMPLETELY OVERHAULED) ========= */}
       {/* ============================================== */}
       <style jsx global>{`
         @keyframes aurora-bg {
@@ -337,7 +344,7 @@ export default function ViewCode() {
             -moz-osx-font-smoothing: grayscale;
         }
 
-        /* === Overrides untuk SyntaxHighlighter Scrollbar === */
+        /* === Overrides for SyntaxHighlighter Scrollbar === */
         pre::-webkit-scrollbar { width: 8px; }
         pre::-webkit-scrollbar-track { background: transparent; }
         pre::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
@@ -449,11 +456,11 @@ export default function ViewCode() {
         :global(.close-button) { background: transparent; border: none; color: var(--text-secondary); font-size: 2rem; line-height: 1; cursor: pointer; padding: 0; transition: color 0.2s ease; }
         :global(.close-button:hover) { color: #fff; }
         :global(.modal-body) { color: var(--text-primary); font-size: 1rem; line-height: 1.6; max-height: 60vh; overflow-y: auto; padding-right: 0.5rem; }
-        
+
         @media (max-width: 900px) {
             .main-grid { grid-template-columns: 1fr; }
         }
       `}</style>
-    </>
-  );
+        </>
+     );
 }
