@@ -1,0 +1,42 @@
+import fetch from 'node-fetch';
+
+const TINYURL_API_TOKEN = 'k1MtnMHy5UHetjWefOv8aWwpEPa3pIzXHpL5QNESyWvUkP3uXaxgtQfA3IeI';
+
+async function createTinyURL(longUrl, alias = null) {
+  const apiUrl = 'https://api.tinyurl.com/create';
+
+  const payload = {
+    url: longUrl,
+    domain: 'tinyurl.com', // bisa juga pakai 'tiny.one' jika ingin Pakai itu suka ati lu pada🗿
+  };
+
+  if (alias) {
+    payload.alias = alias; // ini custom path jika ingin e.g. alias: 'my-short-link' bebas sih🗿
+  }
+
+  const response = await fetch(apiUrl, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${TINYURL_API_TOKEN}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const data = await response.json();
+
+  if (!response.ok || !data.data || !data.data.tiny_url) {
+    throw new Error(`TinyURL API failed: ${JSON.stringify(data)}`);
+  }
+
+  return data.data.tiny_url;
+}
+
+(async () => {
+  try {
+    const linktitit = await createTinyURL('https://example.com', 'contohlink123');
+    console.log('✅ Shortlink TinyURL:', linktitit);
+  } catch (err) {
+    console.error('❌ Gagal:', err.message);
+  }
+})();
