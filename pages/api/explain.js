@@ -1,18 +1,23 @@
 // /pages/api/explain.js
 import fetch from "node-fetch";
 
-async function askAiMulti(question, model = "llama-3.3", systemPrompt = null) {
-  try {
-    const response = await fetch("https://ai-interface.anisaofc.my.id/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        question: question,
-        model: model,
-        system_prompt: systemPrompt
-      }),
-    });
+const apikey_maleyn = [
+  'mg-Vmh4rgDCusL1SYdb7JKzliaffDOtRq7x',
+  'mg-0Hi4qiYQpduDctTO67qcwkMP8CcTcPtp',
+  'mg-qHrClPKfeG1DfU2Hx2ggaO1iKA8vptOk'
+];
 
+function getRandomApiKeymaleyn() {
+  return apikey_maleyn[Math.floor(Math.random() * apikey_maleyn.length)];
+}
+
+async function askAiMulti(question) {
+  try {
+    const apiKey = getRandomApiKeymaleyn();
+    const query = encodeURIComponent(question);
+    const url = `https://ai-interface.anisaofc.my.id/api/chat/blackbox/chat?q=${query}&apikey=${apiKey}`;
+
+    const response = await fetch(url);
     if (!response.ok) throw new Error(`HTTP ${response.status} - ${response.statusText}`);
 
     const data = await response.json();
@@ -35,8 +40,7 @@ export default async function handler(req, res) {
 
   try {
     const explanation = await askAiMulti(
-      `Tolong jelaskan kode berikut dalam bahasa Indonesia:\n\n${code}`,
-      "llama-3.3"
+      `Tolong jelaskan kode berikut dalam bahasa Indonesia:\n\n${code}`
     );
 
     if (!explanation) {
