@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// --- ICONS (Tidak ada perubahan) ---
+// --- ICONS (No changes) ---
 const SearchIcon = () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
 );
@@ -16,9 +16,23 @@ const CodeIcon = () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
 );
 
+// --- MODAL COMPONENT ---
+const Modal = ({ isOpen, onClose, file }) => {
+    if (!isOpen) return null;
 
-// --- KOMPONEN ANAK (CHILD COMPONENTS) ---
-const CodeItem = ({ file }) => {
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <motion.div className="modal-content" onClick={(e) => e.stopPropagation()} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <h2>{file}</h2>
+                <p>Details about the file: {file}</p>
+                <button onClick={onClose}>Close</button>
+            </motion.div>
+        </div>
+    );
+};
+
+// --- CHILD COMPONENTS ---
+const CodeItem = ({ file, onClick }) => {
     const [category, ...rest] = file.split('-');
     const fileName = rest.join('-');
 
@@ -33,7 +47,7 @@ const CodeItem = ({ file }) => {
             layout
             variants={itemVariants}
             className="code-item"
-            onClick={() => (window.location.href = `/view/${file}`)}
+            onClick={() => onClick(file)}
         >
             <div className="icon-wrapper">
                 <FileIcon />
@@ -58,13 +72,13 @@ const CategoryPill = ({ category, selectedCategory, onClick }) => (
     </button>
 );
 
-
-// --- KOMPONEN UTAMA (MAIN COMPONENT) ---
+// --- MAIN COMPONENT ---
 export default function Home({ codes }) {
     const [search, setSearch] = useState('');
     const [filtered, setFiltered] = useState(codes || []);
     const [selectedCategory, setSelectedCategory] = useState('');
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+    const [modalFile, setModalFile] = useState(null);
 
     const categories = ['Semua', ...new Set(codes.map(file => file.split('-')[0]))];
 
@@ -107,13 +121,8 @@ export default function Home({ codes }) {
             '--mouse-x': `${mousePosition.x}px`,
             '--mouse-y': `${mousePosition.y}px`,
         }}>
-            
-            {/* ================================================================== */}
-            {/* ============ SEMUA KODE CSS ADA DI DALAM FILE INI ================ */}
-            {/* ================================================================== */}
-
             <style jsx global>{`
-                /* Gaya Global - berlaku untuk seluruh halaman */
+                /* Global Styles */
                 @keyframes fadeIn {
                     from { opacity: 0; transform: translateY(-20px); }
                     to { opacity: 1; transform: translateY(0); }
@@ -141,7 +150,7 @@ export default function Home({ codes }) {
             `}</style>
             
             <style jsx>{`
-                /* Gaya Lokal - hanya berlaku untuk elemen di dalam komponen Home */
+                /* Local Styles */
                 .container {
                   min-height: 100vh;
                   padding: 3rem 1.5rem;
@@ -151,19 +160,6 @@ export default function Home({ codes }) {
                   align-items: center;
                   position: relative;
                   overflow: hidden;
-                }
-                .container::before {
-                  content: '';
-                  position: absolute;
-                  width: 1000px;
-                  height: 1000px;
-                  top: var(--mouse-y);
-                  left: var(--mouse-x);
-                  transform: translate(-50%, -50%);
-                  background-image: radial-gradient(circle, var(--primary-glow) 0%, var(--secondary-glow) 30%, transparent 70%);
-                  opacity: 0.5;
-                  transition: transform 0.2s ease-out;
-                  pointer-events: none;
                 }
                 .header {
                   text-align: center;
@@ -199,10 +195,11 @@ export default function Home({ codes }) {
                     backdrop-filter: blur(12px);
                     -webkit-backdrop-filter: blur(12px);
                     transition: all 0.3s ease;
+                    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
                 }
                 .stat-card:hover {
                     transform: translateY(-5px);
-                    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+                    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
                     border-color: rgba(56, 139, 253, 0.5);
                 }
                 .stat-card strong {
@@ -228,10 +225,6 @@ export default function Home({ codes }) {
                 .search-wrapper {
                     position: relative;
                 }
-                
-                /* Penggunaan :global(selector) untuk menargetkan elemen di dalam 
-                  komponen anak (child component) dari dalam style jsx induk.
-                */
                 .search-wrapper :global(svg) {
                     position: absolute;
                     left: 16px;
@@ -299,6 +292,7 @@ export default function Home({ codes }) {
                   transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
                   position: relative;
                   overflow: hidden;
+                  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
                 }
                 :global(.code-item:hover) {
                     transform: translateY(-4px) scale(1.02);
@@ -372,16 +366,47 @@ export default function Home({ codes }) {
                   color: var(--text-secondary);
                 }
 
+                /* Modal Styles */
+                .modal-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0, 0, 0, 0.7);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                }
+                .modal-content {
+                    background: white;
+                    padding: 2rem;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                    text-align: center;
+                }
+                .modal-content h2 {
+                    margin-bottom: 1rem;
+                }
+                .modal-content button {
+                    padding: 0.5rem 1rem;
+                    border: none;
+                    border-radius: 5px;
+                    background: var(--border-hover);
+                    color: white;
+                    cursor: pointer;
+                    transition: background 0.3s;
+                }
+                .modal-content button:hover {
+                    background: rgba(56, 139, 253, 0.8);
+                }
+
                 @media (max-width: 768px) {
                   h1 { font-size: 2.5rem; }
                   .subtitle { font-size: 1rem; }
                   .dashboard { flex-direction: column; gap: 1rem; }
                 }
             `}</style>
-            
-            {/* ================================================================== */}
-            {/* ======================= BAGIAN HTML (JSX) ======================== */}
-            {/* ================================================================== */}
 
             <header className="header">
                 <h1>Code Library Pro 🚀</h1>
@@ -431,7 +456,9 @@ export default function Home({ codes }) {
             >
                 <AnimatePresence>
                     {filtered.length > 0 ? (
-                        filtered.map((file) => <CodeItem key={file} file={file} />)
+                        filtered.map((file) => (
+                            <CodeItem key={file} file={file} onClick={setModalFile} />
+                        ))
                     ) : (
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9 }}
@@ -445,12 +472,12 @@ export default function Home({ codes }) {
                     )}
                 </AnimatePresence>
             </motion.div>
+
+            <Modal isOpen={modalFile !== null} onClose={() => setModalFile(null)} file={modalFile} />
         </div>
     );
 }
 
-
-// --- getStaticProps (Tidak ada perubahan) ---
 export async function getStaticProps() {
   const fs = require('fs');
   const path = require('path');
