@@ -168,23 +168,24 @@ export default function ViewCode() {
   };
 
   const explainCode = async () => {
-    showAlert("🤖 Analyzing Code...", "The AI is working on an explanation. Please wait a moment...");
+    showAlert("🤖 Analyzing Code...", "AI sedang menjelaskan kode. Mohon tunggu sebentar...");
+  
     try {
-     const response = await fetch("/api/explain", {
-         method: "POST",
-         headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({ code }),
-     });
+      const response = await fetch("/api/explain", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }), // pastikan variabel `code` tersedia di scope
+      });
 
-     const data = await response.json();
+      const data = await response.json();
 
-     if (response.ok) {
-       showAlert("📖 AI Explanation", data.explanation);
-     } else {
-        showAlert("❌ An Error Occurred", data.error || "Failed to get explanation from AI.");
-    }
+      if (response.ok && data.explanation) {
+        showAlert("📖 Penjelasan AI", data.explanation);
+      } else {
+        showAlert("❌ Terjadi Kesalahan", data.error || "Gagal mendapatkan penjelasan dari AI.");
+      }
     } catch (error) {
-      showAlert("❌ An Error Occurred", "Connection to the server failed. Please try again later.");
+      showAlert("❌ Gagal Terhubung", "Gagal menghubungi server. Coba lagi nanti.");
     }
   };
 
