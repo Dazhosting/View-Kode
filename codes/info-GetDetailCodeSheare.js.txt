@@ -1,0 +1,38 @@
+const axios = require('axios');
+const { load } = require('cheerio');
+
+/**
+ * Get detail informasi dari https://codeshare.cloudku.click/view?id=...
+ * @param {string} id - ID snippet di Codeshare
+ * @returns {Promise<object>} - Detail data seperti judul, username, views, dan kode
+ */
+async function getDetailFromCodeshare(id) {
+  try {
+    const url = `https://codeshare.cloudku.click/view?id=${id}`;
+    const { data: html } = await axios.get(url);
+
+    const $ = load(html);
+
+    const title = $('.title-section h1').text().trim();
+    const username = $('.user-link .username').text().trim();
+    const views = $('.stat-item span').first().text().trim();
+    const code = $('#code-block').text().trim();
+
+    return {
+      title,
+      username,
+      views,
+      code,
+      raw_url: `https://codeshare.cloudku.click/view?id=${id}&raw=true`
+    };
+  } catch (err) {
+    console.error("❌ Error while fetching detail:", err.message);
+    return null;
+  }
+}
+
+Contoh penggunaan:
+(async () => {
+  const detail = await getDetailFromCodeshare("HkqJXMrb");
+  console.log(detail);
+})();
