@@ -1,0 +1,29 @@
+import fetch from 'node-fetch'; // kalau pakai Node.js < 18
+
+async function scrapeAiVipers(prompt) {
+  try {
+    const res = await fetch("https://vrx-chataivipers-omega.vercel.app/api/vipers", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ prompt })
+    });
+
+    if (!res.ok) {
+      throw new Error(`Gagal request: ${res.status} ${res.statusText}`);
+    }
+
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    console.error("Error:", err.message);
+    return null;
+  }
+}
+
+// Contoh penggunaan nya tes dulu, sesuai kan dengan code kalian
+(async () => {
+  const result = await scrapeAiVipers("Halo, ini test dari scraper async function");
+  console.log(result);
+})();
